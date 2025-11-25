@@ -63,23 +63,41 @@ export const AnalysisDashboard: React.FC<Props> = ({ result, technicianName, job
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const contentWidth = pageWidth - (margin * 2);
     let yPos = 0;
 
-    // --- Header Background ---
-    doc.setFillColor(15, 23, 42); // Slate-900
+    const checkPageBreak = (heightToAdd: number) => {
+        if (yPos + heightToAdd >= pageHeight - 20) {
+            doc.addPage();
+            yPos = 20;
+            return true;
+        }
+        return false;
+    };
+
+    // --- Header Background (White with bottom border) ---
+    doc.setFillColor(255, 255, 255); // White
     doc.rect(0, 0, pageWidth, 40, 'F');
     
+    // Header Accent Line (Red/Blue Brand Colors)
+    doc.setDrawColor(220, 38, 38); // Red
+    doc.setLineWidth(0.5);
+    doc.line(margin, 40, margin + 20, 40); // Red accent
+    
+    doc.setDrawColor(15, 23, 42); // Dark Blue
+    doc.line(margin + 20, 40, pageWidth - margin, 40); // Blue line
+
     // --- Header Text ---
     yPos = 25;
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(15, 23, 42); // Slate-900 (Dark Blue)
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text("Technician Report Analysis", margin, yPos);
+    doc.setFontSize(20);
+    doc.text("Technician Report Analysis", pageWidth - margin, yPos, { align: 'right' });
     
     // --- Metadata Section ---
     yPos = 55;
@@ -104,7 +122,6 @@ export const AnalysisDashboard: React.FC<Props> = ({ result, technicianName, job
         doc.setTextColor(153, 27, 27); // Red-900
     }
     
-    // Draw rounded rect manually or just a rect
     doc.rect(margin, yPos, contentWidth, 25, 'FD'); // Fill and Draw border
     
     doc.setFont("helvetica", "bold");
@@ -123,26 +140,135 @@ export const AnalysisDashboard: React.FC<Props> = ({ result, technicianName, job
     doc.text(splitSafety, margin + 5, yPos + 18);
 
     // --- Scores ---
-    yPos += 40;
+    yPos += 35;
     doc.setTextColor(15, 23, 42); // Slate-900
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text("PERFORMANCE SCORES", margin, yPos);
     
-    yPos += 10;
+    yPos += 8;
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(`Technical Knowledge: ${result.technicalScore}/5`, margin, yPos);
-    doc.text(`Professionalism: ${result.professionalismScore}/5`, margin + 60, yPos);
+    doc.text(`Professionalism: ${result.professionalismScore}/5`, margin + 70, yPos);
 
-    // --- Client Ready Rewrite (The main content) ---
-    yPos += 20;
+    // --- Operational Analysis Section ---
+    yPos += 15;
+    
+    // Section Header Bar
+    doc.setFillColor(241, 245, 249); // Slate-100
+    doc.rect(margin, yPos, contentWidth, 8, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105); // Slate-600
+    doc.text("OPERATIONAL ANALYSIS & FOLLOW-UP", margin + 2, yPos + 5.5);
+
+    yPos += 15;
+
+    // Grid Layout for Flags and Follow-up
+    const leftColX = margin;
+    const rightColX = margin + (contentWidth / 2) + 5;
+    const colWidth = (contentWidth / 2) - 5;
+    let maxSectionY = yPos;
+
+    // -- Left Column: Operational Flags --
+    let currentY = yPos;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Operational Flags", leftColX, currentY);
+    
+    currentY += 8;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(100, 116, 139); // Slate-500
+    doc.text("Overrides Active:", leftColX, currentY);
+    
+    doc.setFont("helvetica", "bold"); // Keep bold for status
+    if (result.overridesActive) {
+        doc.setTextColor(180, 83, 9); // Amber-700
+        doc.text("YES", leftColX + 35, currentY);
+        
+        if (result.overridesList && result.overridesList.length > 0) {
+            currentY += 5;
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(51, 65, 85);
+            const listText = result.overridesList.join(', ');
+            const splitList = doc.splitTextToSize(listText, colWidth);
+            doc.text(splitList, leftColX, currentY);
+            currentY += (splitList.length * 5);
+        } else {
+             currentY += 6;
+        }
+    } else {
+        doc.setTextColor(51, 65, 85);
+        doc.text("NO", leftColX + 35, currentY);
+        currentY += 6;
+    }
+
+    currentY += 4;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(100, 116, 139);
+    doc.text("Network Issues:", leftColX, currentY);
+    
+    if (result.networkIssues) {
+        doc.setTextColor(220, 38, 38); // Red-600
+        doc.text("DETECTED", leftColX + 35, currentY);
+    } else {
+        doc.setTextColor(51, 65, 85);
+        doc.text("NONE", leftColX + 35, currentY);
+    }
+    
+    if (currentY > maxSectionY) maxSectionY = currentY;
+
+
+    // -- Right Column: Follow-up --
+    currentY = yPos;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Follow-up Actions", rightColX, currentY);
+    
+    currentY += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Action Required:", rightColX, currentY);
+
+    if (result.followUpRequired) {
+        doc.setTextColor(220, 38, 38); // Red
+        doc.text("YES", rightColX + 35, currentY);
+        
+        currentY += 6;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(15, 23, 42);
+        doc.text("Next Steps:", rightColX, currentY);
+        
+        currentY += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(51, 65, 85);
+        const details = result.followUpDetails ? result.followUpDetails.replace(/\*\*/g, '') : "Refer to analysis.";
+        const splitDetails = doc.splitTextToSize(details, colWidth);
+        doc.text(splitDetails, rightColX, currentY);
+        currentY += (splitDetails.length * 5);
+    } else {
+        doc.setTextColor(22, 163, 74); // Green
+        doc.text("NO", rightColX + 35, currentY);
+    }
+
+    if (currentY > maxSectionY) maxSectionY = currentY;
+
+    // Update main yPos to the bottom of the tallest column
+    yPos = maxSectionY + 15;
+
+    // --- Client Ready Rewrite ---
+    checkPageBreak(50); // Ensure header + some text fits
+
     doc.setFillColor(241, 245, 249); // Slate-100 (Divider)
     doc.rect(margin, yPos, contentWidth, 1, 'F'); // Line
     
     yPos += 15;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setTextColor(15, 23, 42); // Slate-900
     doc.text("Client-Ready Report", margin, yPos);
     
@@ -154,9 +280,6 @@ export const AnalysisDashboard: React.FC<Props> = ({ result, technicianName, job
     // Clean up markdown for PDF text
     const cleanRewrite = result.clientRewrite.replace(/\*\*/g, ''); 
     const splitRewrite = doc.splitTextToSize(cleanRewrite, contentWidth);
-    
-    // Pagination for long text
-    const pageHeight = doc.internal.pageSize.getHeight();
     
     for (let i = 0; i < splitRewrite.length; i++) {
         if (yPos > pageHeight - 20) {

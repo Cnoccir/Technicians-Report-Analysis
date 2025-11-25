@@ -1,7 +1,8 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ShieldAlert, Activity, FileText, CheckCircle2, AlertTriangle, Loader2, ArrowRight, ArrowLeft, RefreshCw, Clock, Building2, User } from 'lucide-react';
+import { ShieldAlert, FileText, CheckCircle2, AlertTriangle, Loader2, ArrowRight, ArrowLeft, RefreshCw, Clock, Building2, User, ClipboardList } from 'lucide-react';
 import { AnalysisDashboard } from './components/AnalysisDashboard';
 import { analyzeReport } from './services/auditService';
 import { AnalysisResult, ReportHistoryItem } from './types';
@@ -115,16 +116,17 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-red-100 selection:text-red-900">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-red-600 p-2 rounded-lg shadow-lg shadow-red-600/20">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="bg-red-50 p-2.5 rounded-xl border border-red-100 shadow-sm">
+              <ClipboardList className="h-8 w-8 text-red-600" strokeWidth={1.5} />
             </div>
+            <div className="hidden sm:block h-10 w-px bg-slate-200"></div>
             <div>
-              <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">
+              <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 leading-tight">
                 Technician's Report Analysis
               </h1>
-              <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider hidden sm:block">
+              <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Operations & Safety Compliance
               </p>
             </div>
