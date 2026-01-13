@@ -1,10 +1,22 @@
 import { GoogleGenAI } from "@google/genai";
 import { AnalysisResult } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getApiKey = (apiKey?: string): string => {
+  const trimmedKey = apiKey?.trim();
+  if (trimmedKey) {
+    return trimmedKey;
+  }
 
-export const analyzeReport = async (reportText: string): Promise<AnalysisResult> => {
+  if (process.env.API_KEY) {
+    return process.env.API_KEY;
+  }
+
+  throw new Error("Missing Gemini API key");
+};
+
+export const analyzeReport = async (reportText: string, apiKey?: string): Promise<AnalysisResult> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: getApiKey(apiKey) });
     const prompt = `
       Act as a Senior Building Automation Systems (BAS) Operations Manager and Safety Compliance Officer.
       Audit this field service report: "${reportText}"

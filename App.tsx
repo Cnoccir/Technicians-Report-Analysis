@@ -26,6 +26,7 @@ const App: React.FC = () => {
   const [reportText, setReportText] = useState('');
   const [technicianName, setTechnicianName] = useState('');
   const [jobSiteName, setJobSiteName] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ const App: React.FC = () => {
     setIsAnalyzing(true);
     setError(null);
     try {
-      const result = await analyzeReport(reportText);
+      const result = await analyzeReport(reportText, apiKey);
       setAnalysisResult(result);
       
       // Save to history
@@ -89,6 +90,7 @@ const App: React.FC = () => {
     setReportText('');
     setTechnicianName('');
     setJobSiteName('');
+    setApiKey('');
     setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -211,6 +213,19 @@ const App: React.FC = () => {
                         value={jobSiteName}
                         onChange={(e) => setJobSiteName(e.target.value)}
                         placeholder="e.g. Central Hospital"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-slate-800 placeholder:text-slate-400 text-sm transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="apiKey" className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                        <ShieldAlert className="w-3.5 h-3.5" /> Gemini API Key
+                      </label>
+                      <input
+                        id="apiKey"
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Paste your Gemini API key"
                         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-slate-800 placeholder:text-slate-400 text-sm transition-all"
                       />
                     </div>
